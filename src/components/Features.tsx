@@ -1,5 +1,5 @@
 
-import { MapPin, Search, Compare } from "lucide-react";
+import { MapPin, Search, Scale } from "lucide-react";
 import FeatureCard from "./FeatureCard";
 
 const Features = () => {
@@ -10,7 +10,7 @@ const Features = () => {
       description: "Find the nearest Jana Aushadhi Kendras with real-time availability and directions."
     },
     {
-      icon: Compare,
+      icon: Scale,
       title: "Price Comparison",
       description: "Compare medicine prices across different stores to find the most affordable options."
     },

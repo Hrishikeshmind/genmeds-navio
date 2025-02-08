@@ -1,5 +1,5 @@
 
-import { MapPin, Search, Compare, Pill } from "lucide-react";
+import { MapPin, Search, Scale, Pill } from "lucide-react";
 import { Button } from "@/components/ui/button";
 
 const NavigationHeader = () => {
@@ -18,7 +18,7 @@ const NavigationHeader = () => {
               <span>Find Stores</span>
             </Button>
             <Button variant="ghost" className="flex items-center space-x-2">
-              <Compare className="w-4 h-4" />
+              <Scale className="w-4 h-4" />
               <span>Compare Prices</span>
             </Button>
             <Button variant="ghost" className="flex items-center space-x-2">
