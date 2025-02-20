@@ -1,6 +1,7 @@
 
 import { MapPin, Search, Scale, Pill } from "lucide-react";
 import { Button } from "@/components/ui/button";
+import { Input } from "@/components/ui/input";
 import { Link } from "react-router-dom";
 
 const NavigationHeader = () => {
@@ -34,9 +35,14 @@ const NavigationHeader = () => {
             </Link>
           </div>
 
-          <Button className="bg-primary text-white hover:bg-primary/90">
-            Upload Prescription
-          </Button>
+          <div className="relative flex items-center">
+            <Input
+              type="search"
+              placeholder="Search medicines..."
+              className="w-[200px] pr-8"
+            />
+            <Search className="w-4 h-4 absolute right-3 text-gray-400" />
+          </div>
         </nav>
       </div>
     </header>
