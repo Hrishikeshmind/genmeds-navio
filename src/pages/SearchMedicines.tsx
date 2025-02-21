@@ -1,7 +1,9 @@
 
 import { useState } from "react";
-import { Search, AlertCircle } from "lucide-react";
+import { Search, AlertCircle, ArrowLeft } from "lucide-react";
 import { Input } from "@/components/ui/input";
+import { Button } from "@/components/ui/button";
+import { Link } from "react-router-dom";
 import {
   Table,
   TableBody,
@@ -36,10 +38,6 @@ const SearchMedicines = () => {
     setSearchResults(results);
   };
 
-  const calculateLowestBrandPrice = (medicine: Medicine) => {
-    return Math.min(...medicine.brands.map(brand => brand.price));
-  };
-
   const calculateHighestSavings = (medicine: Medicine) => {
     const highestBrandPrice = Math.max(...medicine.brands.map(brand => brand.price));
     return ((highestBrandPrice - medicine.generic.price) / highestBrandPrice * 100).toFixed(0);
@@ -49,9 +47,16 @@ const SearchMedicines = () => {
     <div className="min-h-screen pt-20 bg-white">
       <div className="container mx-auto px-4">
         <div className="max-w-6xl mx-auto">
-          <div className="flex items-center space-x-2 mb-8">
-            <Search className="w-6 h-6 text-primary" />
-            <h1 className="text-3xl font-bold text-secondary">Search Medicines</h1>
+          <div className="flex items-center space-x-4 mb-8">
+            <Link to="/">
+              <Button variant="ghost" size="icon" className="rounded-full">
+                <ArrowLeft className="h-6 w-6" />
+              </Button>
+            </Link>
+            <div className="flex items-center space-x-2">
+              <Search className="w-6 h-6 text-primary" />
+              <h1 className="text-3xl font-bold text-secondary">Search Medicines</h1>
+            </div>
           </div>
           
           <div className="bg-white rounded-xl shadow-lg p-6">
