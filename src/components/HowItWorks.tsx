@@ -1,12 +1,12 @@
 
-import { Search, MapPin, Upload, Clock } from "lucide-react";
+import { Search, MapPin, Clock } from "lucide-react";
 
 const HowItWorks = () => {
   const steps = [
     {
-      icon: Upload,
-      title: "Upload Prescription",
-      description: "Simply upload your prescription or search for medicines"
+      icon: Search,
+      title: "Search Medicines",
+      description: "Search for medicines by name, category, or brand"
     },
     {
       icon: Search,
@@ -17,11 +17,6 @@ const HowItWorks = () => {
       icon: MapPin,
       title: "Find Nearby Stores",
       description: "Locate the nearest Jana Aushadhi Kendra with real-time availability"
-    },
-    {
-      icon: Clock,
-      title: "Save Time & Money",
-      description: "Get your medicines at the most affordable prices, hassle-free"
     }
   ];
 
@@ -33,11 +28,11 @@ const HowItWorks = () => {
             How It Works
           </h2>
           <p className="text-gray-600 max-w-2xl mx-auto">
-            Get your medicines in four simple steps
+            Get your medicines in three simple steps
           </p>
         </div>
         
-        <div className="grid grid-cols-1 md:grid-cols-4 gap-8">
+        <div className="grid grid-cols-1 md:grid-cols-3 gap-8">
           {steps.map((step, index) => {
             const Icon = step.icon;
             return (
