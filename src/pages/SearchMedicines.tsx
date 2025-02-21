@@ -1,6 +1,6 @@
 
 import { useState } from "react";
-import { Search } from "lucide-react";
+import { Search, AlertCircle } from "lucide-react";
 import { Input } from "@/components/ui/input";
 import {
   Table,
@@ -10,32 +10,12 @@ import {
   TableHeader,
   TableRow,
 } from "@/components/ui/table";
-
-// Mock data - in a real app, this would come from an API
-const mockMedicines = [
-  {
-    id: 1,
-    brandName: "Crocin",
-    genericName: "Paracetamol",
-    brandPrice: 25.50,
-    genericPrice: 12.75,
-    composition: "Acetaminophen 500mg",
-    manufacturer: "GSK Healthcare",
-  },
-  {
-    id: 2,
-    brandName: "Allegra",
-    genericName: "Fexofenadine",
-    brandPrice: 85.30,
-    genericPrice: 45.00,
-    composition: "Fexofenadine HCl 120mg",
-    manufacturer: "Sanofi India",
-  },
-];
+import { medicines, Medicine } from "@/data/medicinesData";
+import { Alert, AlertDescription } from "@/components/ui/alert";
 
 const SearchMedicines = () => {
   const [searchQuery, setSearchQuery] = useState("");
-  const [searchResults, setSearchResults] = useState<typeof mockMedicines>([]);
+  const [searchResults, setSearchResults] = useState<Medicine[]>([]);
 
   const handleSearch = (query: string) => {
     setSearchQuery(query);
@@ -45,19 +25,30 @@ const SearchMedicines = () => {
     }
     
     // Filter medicines based on search query
-    const results = mockMedicines.filter(
+    const results = medicines.filter(
       (medicine) =>
-        medicine.brandName.toLowerCase().includes(query.toLowerCase()) ||
-        medicine.genericName.toLowerCase().includes(query.toLowerCase()) ||
-        medicine.composition.toLowerCase().includes(query.toLowerCase())
+        medicine.name.toLowerCase().includes(query.toLowerCase()) ||
+        medicine.category.toLowerCase().includes(query.toLowerCase()) ||
+        medicine.brands.some(brand => 
+          brand.brand.toLowerCase().includes(query.toLowerCase())
+        )
     );
     setSearchResults(results);
+  };
+
+  const calculateLowestBrandPrice = (medicine: Medicine) => {
+    return Math.min(...medicine.brands.map(brand => brand.price));
+  };
+
+  const calculateHighestSavings = (medicine: Medicine) => {
+    const highestBrandPrice = Math.max(...medicine.brands.map(brand => brand.price));
+    return ((highestBrandPrice - medicine.generic.price) / highestBrandPrice * 100).toFixed(0);
   };
 
   return (
     <div className="min-h-screen pt-20 bg-white">
       <div className="container mx-auto px-4">
-        <div className="max-w-4xl mx-auto">
+        <div className="max-w-6xl mx-auto">
           <div className="flex items-center space-x-2 mb-8">
             <Search className="w-6 h-6 text-primary" />
             <h1 className="text-3xl font-bold text-secondary">Search Medicines</h1>
@@ -67,41 +58,77 @@ const SearchMedicines = () => {
             <div className="space-y-6">
               <Input
                 type="text"
-                placeholder="Search medicines by name or composition"
+                placeholder="Search medicines by name, category, or brand"
                 className="w-full"
                 value={searchQuery}
                 onChange={(e) => handleSearch(e.target.value)}
               />
 
               {searchResults.length > 0 ? (
-                <Table>
-                  <TableHeader>
-                    <TableRow>
-                      <TableHead>Brand Name</TableHead>
-                      <TableHead>Generic Name</TableHead>
-                      <TableHead>Composition</TableHead>
-                      <TableHead>Brand Price</TableHead>
-                      <TableHead>Generic Price</TableHead>
-                      <TableHead>Savings</TableHead>
-                    </TableRow>
-                  </TableHeader>
-                  <TableBody>
-                    {searchResults.map((medicine) => (
-                      <TableRow key={medicine.id}>
-                        <TableCell className="font-medium">
-                          {medicine.brandName}
-                        </TableCell>
-                        <TableCell>{medicine.genericName}</TableCell>
-                        <TableCell>{medicine.composition}</TableCell>
-                        <TableCell>₹{medicine.brandPrice.toFixed(2)}</TableCell>
-                        <TableCell>₹{medicine.genericPrice.toFixed(2)}</TableCell>
-                        <TableCell className="text-green-600">
-                          {((medicine.brandPrice - medicine.genericPrice) / medicine.brandPrice * 100).toFixed(0)}% less
-                        </TableCell>
-                      </TableRow>
-                    ))}
-                  </TableBody>
-                </Table>
+                <div className="space-y-6">
+                  {searchResults.map((medicine) => (
+                    <div key={medicine.name} className="space-y-4">
+                      <div className="flex items-center justify-between">
+                        <div>
+                          <h2 className="text-xl font-semibold">{medicine.name}</h2>
+                          <p className="text-gray-600">
+                            {medicine.category} • {medicine.dosage_form} • {medicine.strength}
+                          </p>
+                        </div>
+                        {medicine.prescription_required && (
+                          <Alert className="w-auto">
+                            <AlertCircle className="h-4 w-4" />
+                            <AlertDescription>
+                              Prescription Required
+                            </AlertDescription>
+                          </Alert>
+                        )}
+                      </div>
+
+                      <Table>
+                        <TableHeader>
+                          <TableRow>
+                            <TableHead>Brand Name</TableHead>
+                            <TableHead>Manufacturer</TableHead>
+                            <TableHead className="text-right">Price (₹)</TableHead>
+                          </TableRow>
+                        </TableHeader>
+                        <TableBody>
+                          {medicine.brands.map((brand) => (
+                            <TableRow key={brand.brand}>
+                              <TableCell className="font-medium">
+                                {brand.brand}
+                              </TableCell>
+                              <TableCell>{brand.manufacturer}</TableCell>
+                              <TableCell className="text-right">₹{brand.price}</TableCell>
+                            </TableRow>
+                          ))}
+                          <TableRow className="bg-green-50">
+                            <TableCell className="font-medium text-green-700">
+                              Generic Alternative
+                            </TableCell>
+                            <TableCell className="text-green-700">
+                              {medicine.generic.manufacturer}
+                            </TableCell>
+                            <TableCell className="text-right font-bold text-green-700">
+                              ₹{medicine.generic.price}
+                            </TableCell>
+                          </TableRow>
+                        </TableBody>
+                      </Table>
+
+                      <div className="flex justify-between items-center bg-green-100 p-4 rounded-lg">
+                        <div className="text-green-800">
+                          <p className="font-semibold">Potential Savings with Generic</p>
+                          <p className="text-sm">Compared to branded options</p>
+                        </div>
+                        <div className="text-2xl font-bold text-green-700">
+                          Up to {calculateHighestSavings(medicine)}% less
+                        </div>
+                      </div>
+                    </div>
+                  ))}
+                </div>
               ) : searchQuery ? (
                 <div className="text-center py-8 text-gray-500">
                   No medicines found matching your search.
