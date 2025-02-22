@@ -1,61 +1,53 @@
 
 import { MapPin } from "lucide-react";
-import { useEffect, useRef, useState } from "react";
+import { useEffect, useState } from "react";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { toast } from "@/components/ui/use-toast";
+import { MapContainer, TileLayer, Marker, Popup, useMap } from "react-leaflet";
+import "leaflet/dist/leaflet.css";
+import L from "leaflet";
 
-declare global {
-  interface Window {
-    mappls: any;
-  }
+// Fix Leaflet default marker icon issue
+delete (L.Icon.Default.prototype as any)._getIconUrl;
+L.Icon.Default.mergeOptions({
+  iconRetinaUrl: "https://cdnjs.cloudflare.com/ajax/libs/leaflet/1.7.1/images/marker-icon-2x.png",
+  iconUrl: "https://cdnjs.cloudflare.com/ajax/libs/leaflet/1.7.1/images/marker-icon.png",
+  shadowUrl: "https://cdnjs.cloudflare.com/ajax/libs/leaflet/1.7.1/images/marker-shadow.png",
+});
+
+// LocationMarker component to handle user's location
+function LocationMarker() {
+  const [position, setPosition] = useState<[number, number] | null>(null);
+  const map = useMap();
+
+  useEffect(() => {
+    map.locate().on("locationfound", function (e) {
+      setPosition(e.latlng);
+      map.flyTo(e.latlng, map.getZoom());
+      toast({
+        description: "Location found!",
+      });
+    }).on("locationerror", function (e) {
+      toast({
+        title: "Error",
+        description: "Location access denied. Please enable location services.",
+        variant: "destructive"
+      });
+    });
+  }, [map]);
+
+  return position === null ? null : (
+    <Marker position={position}>
+      <Popup>You are here</Popup>
+    </Marker>
+  );
 }
 
 const StoreLocator = () => {
-  const mapContainer = useRef(null);
   const [searchQuery, setSearchQuery] = useState("");
-  const [map, setMap] = useState<any>(null);
-
-  useEffect(() => {
-    const loadMap = async () => {
-      try {
-        const mapplsScript = document.createElement('script');
-        mapplsScript.src = 'https://apis.mappls.com/advancedmaps/api/YOUR_API_KEY/map_sdk?v=3.0&layer=vector';
-        mapplsScript.async = true;
-        
-        mapplsScript.onload = () => {
-          if (mapContainer.current) {
-            const mapInstance = new window.mappls.Map(mapContainer.current, {
-              center: [28.6139, 77.2090], // Default center (Delhi)
-              zoomControl: true,
-              location: true,
-              zoom: 12
-            });
-            setMap(mapInstance);
-          }
-        };
-
-        document.head.appendChild(mapplsScript);
-      } catch (error) {
-        console.error('Error loading map:', error);
-        toast({
-          title: "Error",
-          description: "Failed to load the map. Please try again later.",
-          variant: "destructive"
-        });
-      }
-    };
-
-    loadMap();
-
-    return () => {
-      // Cleanup
-      const mapplsScript = document.querySelector('script[src*="mappls.com"]');
-      if (mapplsScript) {
-        mapplsScript.remove();
-      }
-    };
-  }, []);
+  const [center] = useState<[number, number]>([20.5937, 78.9629]); // Default center (India)
+  const [stores] = useState<Array<[number, number]>>([]); // This will store the Jana Aushadhi Kendras locations
 
   const handleSearch = async () => {
     if (!searchQuery.trim()) {
@@ -106,10 +98,24 @@ const StoreLocator = () => {
                 </Button>
               </div>
               
-              <div 
-                ref={mapContainer} 
-                className="h-[400px] rounded-lg overflow-hidden"
-              />
+              <div className="h-[400px] rounded-lg overflow-hidden">
+                <MapContainer
+                  center={center}
+                  zoom={5}
+                  style={{ height: "100%", width: "100%" }}
+                >
+                  <TileLayer
+                    url="https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png"
+                    attribution='&copy; <a href="https://www.openstreetmap.org/copyright">OpenStreetMap</a> contributors'
+                  />
+                  <LocationMarker />
+                  {stores.map((position, idx) => (
+                    <Marker key={idx} position={position}>
+                      <Popup>Jana Aushadhi Kendra #{idx + 1}</Popup>
+                    </Marker>
+                  ))}
+                </MapContainer>
+              </div>
             </div>
           </div>
         </div>
