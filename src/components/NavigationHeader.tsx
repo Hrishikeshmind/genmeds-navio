@@ -1,5 +1,5 @@
 
-import { MapPin, Search, Scale, Pill } from "lucide-react";
+import { MapPin, Search, Scale, Pill, Eye } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Link } from "react-router-dom";
 
@@ -30,6 +30,12 @@ const NavigationHeader = () => {
               <Button variant="ghost" className="flex items-center space-x-2">
                 <Search className="w-4 h-4" />
                 <span>Search Medicines</span>
+              </Button>
+            </Link>
+            <Link to="/read-prescription">
+              <Button variant="ghost" className="flex items-center space-x-2">
+                <Eye className="w-4 h-4" />
+                <span>Read Prescription</span>
               </Button>
             </Link>
           </div>
