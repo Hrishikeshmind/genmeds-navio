@@ -102,6 +102,40 @@ const StoreLocator = () => {
     }
   };
 
+  const findNearbyStores = () => {
+    if (!userPosition) {
+      toast({
+        description: "Please enable location services to find nearby stores",
+        variant: "destructive"
+      });
+      return;
+    }
+
+    // Find stores within 10km radius
+    const nearbyStores = SAMPLE_STORES.filter(store => {
+      const distance = calculateDistance(userPosition, store.position);
+      return distance <= 10;
+    });
+
+    if (nearbyStores.length === 0) {
+      toast({
+        description: "No stores found within 10km of your location",
+        variant: "destructive"
+      });
+    } else {
+      toast({
+        description: `Found ${nearbyStores.length} stores within 10km`,
+      });
+      // Select the nearest store
+      const nearest = nearbyStores.reduce((prev, curr) => {
+        const prevDistance = calculateDistance(userPosition, prev.position);
+        const currDistance = calculateDistance(userPosition, curr.position);
+        return prevDistance < currDistance ? prev : curr;
+      });
+      handleStoreSelect(nearest);
+    }
+  };
+
   const handleSearch = async () => {
     if (!searchQuery.trim()) {
       toast({
@@ -138,18 +172,21 @@ const StoreLocator = () => {
                 <Button onClick={handleSearch}>
                   Search
                 </Button>
+                <Button onClick={findNearbyStores} variant="secondary">
+                  Find Nearby
+                </Button>
               </div>
               
               <div className="h-[400px] rounded-lg overflow-hidden">
                 <MapContainer
                   key={userPosition ? `${userPosition[0]}-${userPosition[1]}` : 'default'}
                   className="h-full w-full"
-                  bounds={L.latLngBounds(L.latLng(userPosition || defaultCenter), L.latLng(userPosition || defaultCenter))}
-                  zoom={userPosition ? 12 : 5}
+                  bounds={L.latLngBounds([userPosition?.[0] || defaultCenter[0], userPosition?.[1] || defaultCenter[1]], [userPosition?.[0] || defaultCenter[0], userPosition?.[1] || defaultCenter[1]])}
+                  minZoom={4}
                 >
                   <TileLayer
                     url="https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png"
-                    attributionControl={true}
+                    attribution='&copy; <a href="https://www.openstreetmap.org/copyright">OpenStreetMap</a> contributors'
                   />
                   <LocationMarker onLocationUpdate={handleLocationUpdate} />
                   
