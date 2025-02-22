@@ -111,7 +111,6 @@ const StoreLocator = () => {
       return;
     }
 
-    // For now, just show a toast
     toast({
       description: "Searching nearby stores...",
     });
@@ -144,13 +143,13 @@ const StoreLocator = () => {
               <div className="h-[400px] rounded-lg overflow-hidden">
                 <MapContainer
                   key={userPosition ? `${userPosition[0]}-${userPosition[1]}` : 'default'}
-                  center={userPosition || defaultCenter}
+                  className="h-full w-full"
+                  bounds={L.latLngBounds(L.latLng(userPosition || defaultCenter), L.latLng(userPosition || defaultCenter))}
                   zoom={userPosition ? 12 : 5}
-                  style={{ height: "100%", width: "100%" }}
                 >
                   <TileLayer
                     url="https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png"
-                    attribution='&copy; <a href="https://www.openstreetmap.org/copyright">OpenStreetMap</a> contributors'
+                    attributionControl={true}
                   />
                   <LocationMarker onLocationUpdate={handleLocationUpdate} />
                   
@@ -166,13 +165,10 @@ const StoreLocator = () => {
                     </Marker>
                   ))}
 
-                  {/* Draw path between user and selected store */}
                   {userPosition && selectedStore && (
                     <Polyline
+                      pathOptions={{ color: 'blue', weight: 3, opacity: 0.7 }}
                       positions={[userPosition, selectedStore.position]}
-                      color="blue"
-                      weight={3}
-                      opacity={0.7}
                     />
                   )}
                 </MapContainer>
