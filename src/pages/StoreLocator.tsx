@@ -1,4 +1,3 @@
-
 import { MapPin } from "lucide-react";
 import { useEffect, useState } from "react";
 import { Button } from "@/components/ui/button";
@@ -189,10 +188,9 @@ const StoreLocator = () => {
                 <MapContainer
                   key={userPosition ? `${userPosition[0]}-${userPosition[1]}` : 'default'}
                   className="h-full w-full"
-                  center={userPosition || defaultCenter}
-                  zoom={12}
-                  minZoom={4}
-                  maxZoom={18}
+                  bounds={[[8.4, 68.7], [37.6, 97.25]]} // India bounds
+                  zoom={5}
+                  scrollWheelZoom={false}
                 >
                   <TileLayer
                     url="https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png"
