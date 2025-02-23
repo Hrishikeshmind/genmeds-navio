@@ -5,7 +5,7 @@ import { Input } from "@/components/ui/input";
 import { toast } from "@/components/ui/use-toast";
 import { MapContainer, TileLayer, Marker, Popup, useMap, Polyline } from "react-leaflet";
 import "leaflet/dist/leaflet.css";
-import L from "leaflet";
+import L, { LatLngExpression } from "leaflet";
 
 // Fix Leaflet default marker icon issue
 delete (L.Icon.Default.prototype as any)._getIconUrl;
@@ -17,24 +17,23 @@ L.Icon.Default.mergeOptions({
 
 // Sample store locations (replace with real data)
 const SAMPLE_STORES = [
-  { id: 1, name: "Jana Aushadhi Kendra #1", position: [19.0760, 72.8777] as [number, number] }, // Mumbai
-  { id: 2, name: "Jana Aushadhi Kendra #2", position: [28.6139, 77.2090] as [number, number] }, // Delhi
-  { id: 3, name: "Jana Aushadhi Kendra #3", position: [12.9716, 77.5946] as [number, number] }, // Bangalore
+  { id: 1, name: "Jana Aushadhi Kendra #1", position: [19.0760, 72.8777] as LatLngExpression }, // Mumbai
+  { id: 2, name: "Jana Aushadhi Kendra #2", position: [28.6139, 77.2090] as LatLngExpression }, // Delhi
+  { id: 3, name: "Jana Aushadhi Kendra #3", position: [12.9716, 77.5946] as LatLngExpression }, // Bangalore
 ];
 
 // LocationMarker component to handle user's location with real-time tracking
-function LocationMarker({ onLocationUpdate }: { onLocationUpdate: (position: [number, number]) => void }) {
-  const [position, setPosition] = useState<[number, number] | null>(null);
+function LocationMarker({ onLocationUpdate }: { onLocationUpdate: (position: LatLngExpression) => void }) {
+  const [position, setPosition] = useState<LatLngExpression | null>(null);
   const map = useMap();
 
   useEffect(() => {
     let watchId: number;
 
-    // Start watching position
     if ("geolocation" in navigator) {
       watchId = navigator.geolocation.watchPosition(
         (pos) => {
-          const newPos: [number, number] = [pos.coords.latitude, pos.coords.longitude];
+          const newPos: LatLngExpression = [pos.coords.latitude, pos.coords.longitude];
           setPosition(newPos);
           onLocationUpdate(newPos);
           map.setView(newPos, map.getZoom());
@@ -67,9 +66,9 @@ function LocationMarker({ onLocationUpdate }: { onLocationUpdate: (position: [nu
 }
 
 // Calculate distance between two points
-function calculateDistance(point1: [number, number], point2: [number, number]) {
-  const lat1 = point1[0], lon1 = point1[1];
-  const lat2 = point2[0], lon2 = point2[1];
+function calculateDistance(point1: LatLngExpression, point2: LatLngExpression): number {
+  const [lat1, lon1] = (point1 as [number, number]);
+  const [lat2, lon2] = (point2 as [number, number]);
   const R = 6371; // Earth's radius in km
   const dLat = (lat2 - lat1) * Math.PI / 180;
   const dLon = (lon2 - lon1) * Math.PI / 180;
@@ -83,11 +82,11 @@ function calculateDistance(point1: [number, number], point2: [number, number]) {
 
 const StoreLocator = () => {
   const [searchQuery, setSearchQuery] = useState("");
-  const [userPosition, setUserPosition] = useState<[number, number] | null>(null);
+  const [userPosition, setUserPosition] = useState<LatLngExpression | null>(null);
   const [selectedStore, setSelectedStore] = useState<typeof SAMPLE_STORES[0] | null>(null);
-  const defaultCenter: [number, number] = [20.5937, 78.9629]; // Default center (India)
+  const defaultCenter: LatLngExpression = [20.5937, 78.9629]; // Default center (India)
 
-  const handleLocationUpdate = (position: [number, number]) => {
+  const handleLocationUpdate = (position: LatLngExpression) => {
     setUserPosition(position);
   };
 
@@ -180,12 +179,11 @@ const StoreLocator = () => {
                 <MapContainer
                   key={userPosition ? `${userPosition[0]}-${userPosition[1]}` : 'default'}
                   className="h-full w-full"
-                  center={userPosition || defaultCenter}
-                  zoom={12}
+                  defaultCenter={userPosition || defaultCenter}
+                  defaultZoom={12}
                 >
                   <TileLayer
                     url="https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png"
-                    attribution='&copy; <a href="https://www.openstreetmap.org/copyright">OpenStreetMap</a> contributors'
                   />
                   <LocationMarker onLocationUpdate={handleLocationUpdate} />
                   
