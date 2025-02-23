@@ -1,3 +1,4 @@
+
 import { MapPin } from "lucide-react";
 import { useEffect, useState } from "react";
 import { Button } from "@/components/ui/button";
@@ -15,7 +16,7 @@ L.Icon.Default.mergeOptions({
   shadowUrl: "https://cdnjs.cloudflare.com/ajax/libs/leaflet/1.7.1/images/marker-shadow.png",
 });
 
-// Sample store locations (replace with real data)
+// Sample store locations
 const SAMPLE_STORES = [
   { id: 1, name: "Jana Aushadhi Kendra #1", position: [19.0760, 72.8777] as LatLngExpression }, // Mumbai
   { id: 2, name: "Jana Aushadhi Kendra #2", position: [28.6139, 77.2090] as LatLngExpression }, // Delhi
@@ -29,16 +30,24 @@ function LocationMarker({ onLocationUpdate }: { onLocationUpdate: (position: Lat
 
   useEffect(() => {
     let watchId: number;
+    let isMounted = true;
 
     if ("geolocation" in navigator) {
       watchId = navigator.geolocation.watchPosition(
         (pos) => {
+          if (!isMounted) return;
+          
           const newPos: LatLngExpression = [pos.coords.latitude, pos.coords.longitude];
           setPosition(newPos);
           onLocationUpdate(newPos);
-          map.setView(newPos, map.getZoom());
+          
+          // Only update view if the map is still mounted
+          if (map && map.setView) {
+            map.setView(newPos, map.getZoom() || 12);
+          }
         },
         (error) => {
+          if (!isMounted) return;
           toast({
             title: "Error",
             description: "Location access denied. Please enable location services.",
@@ -54,6 +63,7 @@ function LocationMarker({ onLocationUpdate }: { onLocationUpdate: (position: Lat
     }
 
     return () => {
+      isMounted = false;
       if (watchId) navigator.geolocation.clearWatch(watchId);
     };
   }, [map, onLocationUpdate]);
@@ -179,8 +189,10 @@ const StoreLocator = () => {
                 <MapContainer
                   key={userPosition ? `${userPosition[0]}-${userPosition[1]}` : 'default'}
                   className="h-full w-full"
-                  defaultCenter={userPosition || defaultCenter}
-                  defaultZoom={12}
+                  center={userPosition || defaultCenter}
+                  zoom={12}
+                  minZoom={4}
+                  maxZoom={18}
                 >
                   <TileLayer
                     url="https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png"
