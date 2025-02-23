@@ -1,4 +1,5 @@
-import { MapPin } from "lucide-react";
+
+import { MapPin, ArrowLeft } from "lucide-react";
 import { useEffect, useState } from "react";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
@@ -6,6 +7,7 @@ import { toast } from "@/components/ui/use-toast";
 import { MapContainer, TileLayer, Marker, Popup, useMap, Polyline } from "react-leaflet";
 import "leaflet/dist/leaflet.css";
 import L, { LatLngExpression } from "leaflet";
+import { useNavigate } from "react-router-dom";
 
 // Fix Leaflet default marker icon issue
 delete (L.Icon.Default.prototype as any)._getIconUrl;
@@ -90,6 +92,7 @@ function calculateDistance(point1: LatLngExpression, point2: LatLngExpression): 
 }
 
 const StoreLocator = () => {
+  const navigate = useNavigate();
   const [searchQuery, setSearchQuery] = useState("");
   const [userPosition, setUserPosition] = useState<LatLngExpression | null>(null);
   const [selectedStore, setSelectedStore] = useState<typeof SAMPLE_STORES[0] | null>(null);
@@ -161,9 +164,20 @@ const StoreLocator = () => {
     <div className="min-h-screen pt-20 bg-white">
       <div className="container mx-auto px-4">
         <div className="max-w-3xl mx-auto">
-          <div className="flex items-center space-x-2 mb-8">
-            <MapPin className="w-6 h-6 text-primary" />
-            <h1 className="text-3xl font-bold text-secondary">Find Jana Aushadhi Kendras</h1>
+          <div className="flex items-center space-x-4 mb-8">
+            <Button
+              variant="ghost"
+              size="sm"
+              onClick={() => navigate('/')}
+              className="hover:bg-secondary/10"
+            >
+              <ArrowLeft className="h-4 w-4 mr-2" />
+              Back to Home
+            </Button>
+            <div className="flex items-center space-x-2">
+              <MapPin className="w-6 h-6 text-primary" />
+              <h1 className="text-3xl font-bold text-secondary">Find Jana Aushadhi Kendras</h1>
+            </div>
           </div>
           
           <div className="bg-white rounded-xl shadow-lg p-6 mb-8">
@@ -188,9 +202,7 @@ const StoreLocator = () => {
                 <MapContainer
                   key={userPosition ? `${userPosition[0]}-${userPosition[1]}` : 'default'}
                   className="h-full w-full"
-                  bounds={[[8.4, 68.7], [37.6, 97.25]]} // India bounds
-                  zoom={5}
-                  scrollWheelZoom={false}
+                  bounds={[[8.4, 68.7], [37.6, 97.25]]}
                 >
                   <TileLayer
                     url="https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png"
