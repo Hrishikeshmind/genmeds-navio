@@ -180,15 +180,12 @@ const StoreLocator = () => {
                 <MapContainer
                   key={userPosition ? `${userPosition[0]}-${userPosition[1]}` : 'default'}
                   className="h-full w-full"
-                  bounds={L.latLngBounds([userPosition?.[0] || defaultCenter[0], userPosition?.[1] || defaultCenter[1]], [userPosition?.[0] || defaultCenter[0], userPosition?.[1] || defaultCenter[1]])}
-                  scrollWheelZoom={true}
-                  zoom={12}
                   center={userPosition || defaultCenter}
+                  zoom={12}
                 >
                   <TileLayer
                     url="https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png"
-                    attributionControl={true}
-                    zoomControl={true}
+                    attribution='&copy; <a href="https://www.openstreetmap.org/copyright">OpenStreetMap</a> contributors'
                   />
                   <LocationMarker onLocationUpdate={handleLocationUpdate} />
                   
