@@ -1,4 +1,3 @@
-
 import { MapPin } from "lucide-react";
 import { useEffect, useState } from "react";
 import { Button } from "@/components/ui/button";
@@ -182,11 +181,14 @@ const StoreLocator = () => {
                   key={userPosition ? `${userPosition[0]}-${userPosition[1]}` : 'default'}
                   className="h-full w-full"
                   bounds={L.latLngBounds([userPosition?.[0] || defaultCenter[0], userPosition?.[1] || defaultCenter[1]], [userPosition?.[0] || defaultCenter[0], userPosition?.[1] || defaultCenter[1]])}
-                  minZoom={4}
+                  scrollWheelZoom={true}
+                  zoom={12}
+                  center={userPosition || defaultCenter}
                 >
                   <TileLayer
                     url="https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png"
-                    attribution='&copy; <a href="https://www.openstreetmap.org/copyright">OpenStreetMap</a> contributors'
+                    attributionControl={true}
+                    zoomControl={true}
                   />
                   <LocationMarker onLocationUpdate={handleLocationUpdate} />
                   
