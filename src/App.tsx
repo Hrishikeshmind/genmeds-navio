@@ -8,6 +8,7 @@ import Index from "./pages/Index";
 import StoreLocator from "./pages/StoreLocator";
 import PriceComparison from "./pages/PriceComparison";
 import SearchMedicines from "./pages/SearchMedicines";
+import MedicalChat from "./pages/MedicalChat";
 import NotFound from "./pages/NotFound";
 
 const queryClient = new QueryClient();
@@ -23,6 +24,7 @@ const App = () => (
           <Route path="/stores" element={<StoreLocator />} />
           <Route path="/compare" element={<PriceComparison />} />
           <Route path="/search" element={<SearchMedicines />} />
+          <Route path="/chat" element={<MedicalChat />} />
           <Route path="*" element={<NotFound />} />
         </Routes>
       </BrowserRouter>
