@@ -32,17 +32,38 @@ const MedicalChat = () => {
     setIsLoading(true);
 
     try {
-      const response = await fetch('/functions/v1/chat-with-ai', {
+      const response = await fetch('https://api.openai.com/v1/chat/completions', {
         method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({ message: userMessage }),
+        headers: {
+          'Content-Type': 'application/json',
+        },
+        body: JSON.stringify({
+          model: "gpt-4o-mini",
+          messages: [
+            {
+              role: "system",
+              content: `You are a helpful medical assistant AI that provides general health information and advice. 
+              Important rules:
+              1. Always clarify that you're an AI and not a replacement for professional medical advice
+              2. For serious medical concerns, recommend consulting a healthcare professional
+              3. Focus on providing general health information and explanations
+              4. Be clear, concise, and empathetic in your responses
+              5. If you're unsure about something, say so clearly`
+            },
+            ...messages,
+            { role: "user", content: userMessage }
+          ]
+        })
       });
 
       if (!response.ok) throw new Error('Failed to get response');
       
       const data = await response.json();
-      setMessages(prev => [...prev, { role: 'assistant', content: data.reply }]);
+      const reply = data.choices[0].message.content;
+      
+      setMessages(prev => [...prev, { role: 'assistant', content: reply }]);
     } catch (error) {
+      console.error('Chat error:', error);
       toast({
         title: "Error",
         description: "Failed to get response. Please try again.",
