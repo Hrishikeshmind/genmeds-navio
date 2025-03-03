@@ -5,6 +5,7 @@ import { Button } from "@/components/ui/button";
 import { Card } from "@/components/ui/card";
 import { useNavigate } from "react-router-dom";
 import { toast } from "@/components/ui/use-toast";
+import { Alert, AlertTitle, AlertDescription } from "@/components/ui/alert";
 import axios from "axios";
 
 const ReadPrescription = () => {
@@ -13,6 +14,7 @@ const ReadPrescription = () => {
   const [preview, setPreview] = useState<string | null>(null);
   const [results, setResults] = useState<string[]>([]);
   const [isLoading, setIsLoading] = useState<boolean>(false);
+  const [error, setError] = useState<string | null>(null);
 
   const handleFileChange = (e: React.ChangeEvent<HTMLInputElement>) => {
     if (e.target.files && e.target.files[0]) {
@@ -39,6 +41,7 @@ const ReadPrescription = () => {
       
       // Reset results when new file is selected
       setResults([]);
+      setError(null);
     }
   };
 
@@ -54,17 +57,19 @@ const ReadPrescription = () => {
     }
 
     setIsLoading(true);
+    setError(null);
 
     try {
       // Convert file to base64
       const base64Image = await fileToBase64(file);
       
-      // API key - in a production app, this would be handled by a backend service
-      const apiKey = "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";
+      // API key for OpenAI
+      // In a production app, this should be stored securely on a backend server
+      const apiKey = import.meta.env.VITE_OPENAI_API_KEY || "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";
       
       console.log("Making API request to OpenAI Vision...");
       
-      // Make API request with proper error handling
+      // Make API request
       const response = await axios.post(
         'https://api.openai.com/v1/chat/completions', 
         {
@@ -75,7 +80,7 @@ const ReadPrescription = () => {
               content: [
                 {
                   type: "text",
-                  text: "This is a medical prescription. Extract and list all medications, dosages, and instructions in a clear format."
+                  text: "This is a medical prescription. Extract and list all medications, dosages, and instructions in a clear format. Be very precise and accurate."
                 },
                 {
                   type: "image_url",
@@ -86,13 +91,14 @@ const ReadPrescription = () => {
               ]
             }
           ],
-          max_tokens: 300
+          max_tokens: 500
         },
         {
           headers: {
             'Content-Type': 'application/json',
             'Authorization': `Bearer ${apiKey}`
-          }
+          },
+          timeout: 30000 // 30 seconds timeout
         }
       );
 
@@ -118,9 +124,30 @@ const ReadPrescription = () => {
       }
     } catch (error) {
       console.error("Error analyzing prescription:", error);
+      
+      let errorMessage = "Failed to analyze prescription.";
+      
+      if (axios.isAxiosError(error)) {
+        if (error.response) {
+          console.log("Error response data:", error.response.data);
+          console.log("Error response status:", error.response.status);
+          
+          if (error.response.status === 401) {
+            errorMessage = "Authentication failed. The API key may be invalid or expired.";
+          } else if (error.response.status === 429) {
+            errorMessage = "Too many requests. Please try again later.";
+          } else if (error.response.status >= 500) {
+            errorMessage = "Server error. Please try again later.";
+          }
+        } else if (error.request) {
+          errorMessage = "No response received from server. Check your internet connection.";
+        }
+      }
+      
+      setError(errorMessage);
       toast({
         title: "Error",
-        description: "Failed to analyze prescription. Using sample data instead.",
+        description: errorMessage + " Using sample data instead.",
         variant: "destructive",
       });
       
@@ -128,7 +155,8 @@ const ReadPrescription = () => {
       setResults([
         "Paracetamol 500mg - 1 tablet three times daily",
         "Amoxicillin 250mg - 1 capsule twice daily",
-        "Cetirizine 10mg - 1 tablet at night"
+        "Cetirizine 10mg - 1 tablet at night",
+        "Multivitamin Complex - 1 tablet daily with breakfast"
       ]);
     } finally {
       setIsLoading(false);
@@ -172,6 +200,13 @@ const ReadPrescription = () => {
               <h1 className="text-3xl font-bold text-secondary">Prescription Reader</h1>
             </div>
           </div>
+          
+          {error && (
+            <Alert variant="destructive" className="mb-6">
+              <AlertTitle>Error</AlertTitle>
+              <AlertDescription>{error}</AlertDescription>
+            </Alert>
+          )}
           
           <div className="grid md:grid-cols-2 gap-6">
             <Card className="bg-white rounded-xl shadow-lg p-6 space-y-4">
