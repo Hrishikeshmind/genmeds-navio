@@ -6,7 +6,13 @@ import { Card } from "@/components/ui/card";
 import { useNavigate } from "react-router-dom";
 import { toast } from "@/components/ui/use-toast";
 import { Alert, AlertTitle, AlertDescription } from "@/components/ui/alert";
+import { createClient } from '@supabase/supabase-js';
 import axios from "axios";
+
+const supabase = createClient(
+  import.meta.env.VITE_SUPABASE_URL || '',
+  import.meta.env.VITE_SUPABASE_ANON_KEY || ''
+);
 
 const ReadPrescription = () => {
   const navigate = useNavigate();
@@ -60,16 +66,24 @@ const ReadPrescription = () => {
     setError(null);
 
     try {
+      // Get API key from Supabase
+      const { data, error: secretError } = await supabase
+        .from('secrets')
+        .select('value')
+        .eq('name', 'OPENAI_API_KEY')
+        .single();
+
+      if (secretError || !data) {
+        throw new Error('Failed to retrieve API key from Supabase');
+      }
+
+      const apiKey = data.value;
+      
       // Convert file to base64
       const base64Image = await fileToBase64(file);
       
-      // API key for OpenAI
-      // In a production app, this should be stored securely on a backend server
-      const apiKey = import.meta.env.VITE_OPENAI_API_KEY || "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";
-      
       console.log("Making API request to OpenAI Vision...");
       
-      // Make API request
       const response = await axios.post(
         'https://api.openai.com/v1/chat/completions', 
         {
@@ -80,7 +94,7 @@ const ReadPrescription = () => {
               content: [
                 {
                   type: "text",
-                  text: "This is a medical prescription. Extract and list all medications, dosages, and instructions in a clear format. Be very precise and accurate."
+                  text: "You are a medical professional analyzing a prescription. Please carefully extract and list all medications with their exact:\n1. Name and strength\n2. Dosage form (tablet, capsule, syrup, etc.)\n3. Frequency and timing of administration\n4. Duration of treatment if specified\n5. Any special instructions\n\nBe extremely precise and format the information clearly. If any part is unclear, indicate that explicitly."
                 },
                 {
                   type: "image_url",
@@ -91,27 +105,26 @@ const ReadPrescription = () => {
               ]
             }
           ],
-          max_tokens: 500
+          max_tokens: 1000,
+          temperature: 0.3 // Lower temperature for more precise responses
         },
         {
           headers: {
             'Content-Type': 'application/json',
             'Authorization': `Bearer ${apiKey}`
           },
-          timeout: 30000 // 30 seconds timeout
+          timeout: 45000 // 45 seconds timeout
         }
       );
 
       console.log("Received response:", response.data);
 
-      // Process the response
       if (response.data && response.data.choices && response.data.choices[0].message) {
         const content = response.data.choices[0].message.content;
-        // Split the response into lines to display as separate items
         const medicationList = content
           .split('\n')
           .filter((line: string) => line.trim() !== '')
-          .map((line: string) => line.replace(/^\d+\.\s*/, '').trim()); // Remove numbering if present
+          .map((line: string) => line.replace(/^\d+\.\s*/, '').trim());
         
         setResults(medicationList);
         
@@ -127,17 +140,19 @@ const ReadPrescription = () => {
       
       let errorMessage = "Failed to analyze prescription.";
       
-      if (axios.isAxiosError(error)) {
+      if (error instanceof Error) {
+        errorMessage = error.message;
+      } else if (axios.isAxiosError(error)) {
         if (error.response) {
           console.log("Error response data:", error.response.data);
           console.log("Error response status:", error.response.status);
           
           if (error.response.status === 401) {
-            errorMessage = "Authentication failed. The API key may be invalid or expired.";
+            errorMessage = "Authentication failed. Please check your API key in Supabase.";
           } else if (error.response.status === 429) {
             errorMessage = "Too many requests. Please try again later.";
           } else if (error.response.status >= 500) {
-            errorMessage = "Server error. Please try again later.";
+            errorMessage = "OpenAI server error. Please try again later.";
           }
         } else if (error.request) {
           errorMessage = "No response received from server. Check your internet connection.";
@@ -147,17 +162,9 @@ const ReadPrescription = () => {
       setError(errorMessage);
       toast({
         title: "Error",
-        description: errorMessage + " Using sample data instead.",
+        description: errorMessage,
         variant: "destructive",
       });
-      
-      // Fallback to mock data for demo purposes if the API fails
-      setResults([
-        "Paracetamol 500mg - 1 tablet three times daily",
-        "Amoxicillin 250mg - 1 capsule twice daily",
-        "Cetirizine 10mg - 1 tablet at night",
-        "Multivitamin Complex - 1 tablet daily with breakfast"
-      ]);
     } finally {
       setIsLoading(false);
     }
