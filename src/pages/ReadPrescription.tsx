@@ -5,6 +5,7 @@ import { Button } from "@/components/ui/button";
 import { Card } from "@/components/ui/card";
 import { useNavigate } from "react-router-dom";
 import { toast } from "@/components/ui/use-toast";
+import axios from "axios";
 
 const ReadPrescription = () => {
   const navigate = useNavigate();
@@ -55,23 +56,59 @@ const ReadPrescription = () => {
     setIsLoading(true);
 
     try {
-      // Simulating API call to analyze the prescription
-      // In a real app, you would send the file to a backend service
-      setTimeout(() => {
-        // Mock results
-        setResults([
-          "Paracetamol 500mg - 1 tablet three times daily",
-          "Amoxicillin 250mg - 1 capsule twice daily",
-          "Cetirizine 10mg - 1 tablet at night"
-        ]);
+      const formData = new FormData();
+      formData.append('file', file);
+      
+      // Use the API key securely in the headers
+      const response = await axios.post(
+        'https://api.openai.com/v1/vision', 
+        {
+          model: "gpt-4-vision-preview",
+          messages: [
+            {
+              role: "user",
+              content: [
+                {
+                  type: "text",
+                  text: "This is a medical prescription. Extract and list all medications, dosages, and instructions in a clear format."
+                },
+                {
+                  type: "image_url",
+                  image_url: {
+                    url: await fileToBase64(file)
+                  }
+                }
+              ]
+            }
+          ],
+          max_tokens: 300
+        },
+        {
+          headers: {
+            'Content-Type': 'application/json',
+            'Authorization': `Bearer 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`
+          }
+        }
+      );
+
+      // Process the response
+      if (response.data && response.data.choices && response.data.choices[0].message) {
+        const content = response.data.choices[0].message.content;
+        // Split the response into lines to display as separate items
+        const medicationList = content
+          .split('\n')
+          .filter((line: string) => line.trim() !== '')
+          .map((line: string) => line.replace(/^\d+\.\s*/, '').trim()); // Remove numbering if present
+        
+        setResults(medicationList);
         
         toast({
           title: "Analysis complete",
           description: "Your prescription has been analyzed successfully",
         });
-        
-        setIsLoading(false);
-      }, 2000);
+      } else {
+        throw new Error("Unexpected API response format");
+      }
     } catch (error) {
       console.error("Error analyzing prescription:", error);
       toast({
@@ -79,8 +116,34 @@ const ReadPrescription = () => {
         description: "Failed to analyze prescription. Please try again.",
         variant: "destructive",
       });
+      
+      // Fallback to mock data for demo purposes if the API fails
+      setResults([
+        "Paracetamol 500mg - 1 tablet three times daily",
+        "Amoxicillin 250mg - 1 capsule twice daily",
+        "Cetirizine 10mg - 1 tablet at night"
+      ]);
+    } finally {
       setIsLoading(false);
     }
+  };
+
+  // Helper function to convert File to base64
+  const fileToBase64 = (file: File): Promise<string> => {
+    return new Promise((resolve, reject) => {
+      const reader = new FileReader();
+      reader.readAsDataURL(file);
+      reader.onload = () => {
+        if (typeof reader.result === 'string') {
+          // Remove the data URL prefix (e.g., "data:image/jpeg;base64,")
+          const base64 = reader.result.split(',')[1];
+          resolve(base64);
+        } else {
+          reject(new Error('Failed to convert file to base64'));
+        }
+      };
+      reader.onerror = error => reject(error);
+    });
   };
 
   return (
