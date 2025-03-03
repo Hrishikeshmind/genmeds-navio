@@ -56,14 +56,19 @@ const ReadPrescription = () => {
     setIsLoading(true);
 
     try {
-      const formData = new FormData();
-      formData.append('file', file);
+      // Convert file to base64
+      const base64Image = await fileToBase64(file);
       
-      // Use the API key securely in the headers
+      // API key - in a production app, this would be handled by a backend service
+      const apiKey = "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";
+      
+      console.log("Making API request to OpenAI Vision...");
+      
+      // Make API request with proper error handling
       const response = await axios.post(
-        'https://api.openai.com/v1/vision', 
+        'https://api.openai.com/v1/chat/completions', 
         {
-          model: "gpt-4-vision-preview",
+          model: "gpt-4o",
           messages: [
             {
               role: "user",
@@ -75,7 +80,7 @@ const ReadPrescription = () => {
                 {
                   type: "image_url",
                   image_url: {
-                    url: await fileToBase64(file)
+                    url: `data:image/${file.type.split('/')[1]};base64,${base64Image}`
                   }
                 }
               ]
@@ -86,10 +91,12 @@ const ReadPrescription = () => {
         {
           headers: {
             'Content-Type': 'application/json',
-            'Authorization': `Bearer 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`
+            'Authorization': `Bearer ${apiKey}`
           }
         }
       );
+
+      console.log("Received response:", response.data);
 
       // Process the response
       if (response.data && response.data.choices && response.data.choices[0].message) {
@@ -113,7 +120,7 @@ const ReadPrescription = () => {
       console.error("Error analyzing prescription:", error);
       toast({
         title: "Error",
-        description: "Failed to analyze prescription. Please try again.",
+        description: "Failed to analyze prescription. Using sample data instead.",
         variant: "destructive",
       });
       
