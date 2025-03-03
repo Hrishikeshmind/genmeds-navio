@@ -9,6 +9,7 @@ import StoreLocator from "./pages/StoreLocator";
 import PriceComparison from "./pages/PriceComparison";
 import SearchMedicines from "./pages/SearchMedicines";
 import MedicalChat from "./pages/MedicalChat";
+import ReadPrescription from "./pages/ReadPrescription";
 import NotFound from "./pages/NotFound";
 
 const queryClient = new QueryClient();
@@ -25,6 +26,7 @@ const App = () => (
           <Route path="/compare" element={<PriceComparison />} />
           <Route path="/search" element={<SearchMedicines />} />
           <Route path="/chat" element={<MedicalChat />} />
+          <Route path="/read-prescription" element={<ReadPrescription />} />
           <Route path="*" element={<NotFound />} />
         </Routes>
       </BrowserRouter>
