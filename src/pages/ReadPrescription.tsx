@@ -1,13 +1,14 @@
 import { useState } from "react";
-import { Eye, Upload, ArrowLeft } from "lucide-react";
+import { Eye, Upload, ArrowLeft, Key } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Card } from "@/components/ui/card";
 import { useNavigate } from "react-router-dom";
 import { toast } from "@/components/ui/use-toast";
 import { Alert, AlertTitle, AlertDescription } from "@/components/ui/alert";
+import { Input } from "@/components/ui/input";
 import axios from "axios";
 
-const OPENAI_API_KEY = "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";
+const defaultApiKey = import.meta.env.VITE_OPENAI_API_KEY || "";
 
 const ReadPrescription = () => {
   const navigate = useNavigate();
@@ -16,6 +17,8 @@ const ReadPrescription = () => {
   const [results, setResults] = useState<string[]>([]);
   const [isLoading, setIsLoading] = useState<boolean>(false);
   const [error, setError] = useState<string | null>(null);
+  const [apiKey, setApiKey] = useState<string>(defaultApiKey);
+  const [showApiKeyInput, setShowApiKeyInput] = useState<boolean>(!defaultApiKey);
 
   const handleFileChange = (e: React.ChangeEvent<HTMLInputElement>) => {
     if (e.target.files && e.target.files[0]) {
@@ -44,6 +47,10 @@ const ReadPrescription = () => {
     }
   };
 
+  const handleApiKeyChange = (e: React.ChangeEvent<HTMLInputElement>) => {
+    setApiKey(e.target.value);
+  };
+
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
     if (!file) {
@@ -52,6 +59,16 @@ const ReadPrescription = () => {
         description: "Please select a prescription image to analyze",
         variant: "destructive",
       });
+      return;
+    }
+
+    if (!apiKey) {
+      toast({
+        title: "API Key Required",
+        description: "Please enter your OpenAI API key",
+        variant: "destructive",
+      });
+      setShowApiKeyInput(true);
       return;
     }
 
@@ -69,11 +86,15 @@ const ReadPrescription = () => {
           model: "gpt-4o",
           messages: [
             {
+              role: "system",
+              content: "You are a medical professional analyzing prescriptions. Extract information with high precision and clarity."
+            },
+            {
               role: "user",
               content: [
                 {
                   type: "text",
-                  text: "You are a medical professional analyzing a prescription. Please carefully extract and list all medications with their exact:\n1. Name and strength\n2. Dosage form (tablet, capsule, syrup, etc.)\n3. Frequency and timing of administration\n4. Duration of treatment if specified\n5. Any special instructions\n\nBe extremely precise and format the information clearly. If any part is unclear, indicate that explicitly."
+                  text: "Please carefully extract and list all medications with their exact:\n1. Name and strength\n2. Dosage form (tablet, capsule, syrup, etc.)\n3. Frequency and timing of administration\n4. Duration of treatment if specified\n5. Any special instructions\n\nBe extremely precise and format the information clearly. If any part is unclear, indicate that explicitly."
                 },
                 {
                   type: "image_url",
@@ -85,14 +106,14 @@ const ReadPrescription = () => {
             }
           ],
           max_tokens: 1000,
-          temperature: 0.3 // Lower temperature for more precise responses
+          temperature: 0.3
         },
         {
           headers: {
             'Content-Type': 'application/json',
-            'Authorization': `Bearer ${OPENAI_API_KEY}`
+            'Authorization': `Bearer ${apiKey}`
           },
-          timeout: 45000 // 45 seconds timeout
+          timeout: 60000
         }
       );
 
@@ -128,8 +149,10 @@ const ReadPrescription = () => {
           
           if (error.response.status === 401) {
             errorMessage = "Authentication failed. Please check your API key.";
+            setShowApiKeyInput(true);
           } else if (error.response.status === 429) {
-            errorMessage = "Too many requests. Please try again later.";
+            errorMessage = "Rate limit exceeded. Please try again in a few minutes or use a different API key.";
+            setShowApiKeyInput(true);
           } else if (error.response.status >= 500) {
             errorMessage = "OpenAI server error. Please try again later.";
           }
@@ -195,6 +218,29 @@ const ReadPrescription = () => {
           <div className="grid md:grid-cols-2 gap-6">
             <Card className="bg-white rounded-xl shadow-lg p-6 space-y-4">
               <h2 className="text-xl font-semibold">Upload Prescription</h2>
+              
+              {showApiKeyInput && (
+                <div className="space-y-2">
+                  <label htmlFor="apiKey" className="text-sm font-medium">
+                    OpenAI API Key
+                  </label>
+                  <div className="flex items-center space-x-2">
+                    <Key className="h-4 w-4 text-gray-400" />
+                    <Input
+                      id="apiKey"
+                      type="password"
+                      value={apiKey}
+                      onChange={handleApiKeyChange}
+                      placeholder="Enter your OpenAI API key"
+                      className="flex-1"
+                    />
+                  </div>
+                  <p className="text-xs text-gray-500">
+                    Your API key is used only for this request and is not stored on our servers.
+                  </p>
+                </div>
+              )}
+
               <p className="text-gray-500">
                 Upload a clear image of your prescription. We'll analyze it and identify the medications.
               </p>
@@ -238,6 +284,18 @@ const ReadPrescription = () => {
               >
                 {isLoading ? "Analyzing..." : "Analyze Prescription"}
               </Button>
+
+              {!showApiKeyInput && (
+                <Button
+                  variant="outline"
+                  size="sm"
+                  onClick={() => setShowApiKeyInput(true)}
+                  className="w-full mt-2"
+                >
+                  <Key className="h-4 w-4 mr-2" />
+                  Change API Key
+                </Button>
+              )}
             </Card>
             
             <Card className="bg-white rounded-xl shadow-lg p-6">
