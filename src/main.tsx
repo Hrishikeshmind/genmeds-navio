@@ -3,10 +3,5 @@ import { createRoot } from 'react-dom/client'
 import App from './App.tsx'
 import './index.css'
 
-// Add GPT Engineer script for Select feature
-const script = document.createElement('script')
-script.src = 'https://cdn.gpteng.co/gptengineer.js'
-script.type = 'module'
-document.head.appendChild(script)
-
+// Mount the application to the DOM
 createRoot(document.getElementById("root")!).render(<App />);
