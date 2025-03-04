@@ -1,4 +1,3 @@
-
 import { useState } from "react";
 import { Eye, Upload, ArrowLeft } from "lucide-react";
 import { Button } from "@/components/ui/button";
@@ -6,13 +5,9 @@ import { Card } from "@/components/ui/card";
 import { useNavigate } from "react-router-dom";
 import { toast } from "@/components/ui/use-toast";
 import { Alert, AlertTitle, AlertDescription } from "@/components/ui/alert";
-import { createClient } from '@supabase/supabase-js';
 import axios from "axios";
 
-const supabase = createClient(
-  import.meta.env.VITE_SUPABASE_URL || '',
-  import.meta.env.VITE_SUPABASE_ANON_KEY || ''
-);
+const OPENAI_API_KEY = "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";
 
 const ReadPrescription = () => {
   const navigate = useNavigate();
@@ -27,7 +22,6 @@ const ReadPrescription = () => {
       const selectedFile = e.target.files[0];
       setFile(selectedFile);
       
-      // Create preview for image files
       if (selectedFile.type.includes("image")) {
         const reader = new FileReader();
         reader.onload = (event) => {
@@ -45,7 +39,6 @@ const ReadPrescription = () => {
         });
       }
       
-      // Reset results when new file is selected
       setResults([]);
       setError(null);
     }
@@ -66,20 +59,6 @@ const ReadPrescription = () => {
     setError(null);
 
     try {
-      // Get API key from Supabase
-      const { data, error: secretError } = await supabase
-        .from('secrets')
-        .select('value')
-        .eq('name', 'OPENAI_API_KEY')
-        .single();
-
-      if (secretError || !data) {
-        throw new Error('Failed to retrieve API key from Supabase');
-      }
-
-      const apiKey = data.value;
-      
-      // Convert file to base64
       const base64Image = await fileToBase64(file);
       
       console.log("Making API request to OpenAI Vision...");
@@ -111,7 +90,7 @@ const ReadPrescription = () => {
         {
           headers: {
             'Content-Type': 'application/json',
-            'Authorization': `Bearer ${apiKey}`
+            'Authorization': `Bearer ${OPENAI_API_KEY}`
           },
           timeout: 45000 // 45 seconds timeout
         }
@@ -148,7 +127,7 @@ const ReadPrescription = () => {
           console.log("Error response status:", error.response.status);
           
           if (error.response.status === 401) {
-            errorMessage = "Authentication failed. Please check your API key in Supabase.";
+            errorMessage = "Authentication failed. Please check your API key.";
           } else if (error.response.status === 429) {
             errorMessage = "Too many requests. Please try again later.";
           } else if (error.response.status >= 500) {
@@ -170,14 +149,12 @@ const ReadPrescription = () => {
     }
   };
 
-  // Helper function to convert File to base64
   const fileToBase64 = (file: File): Promise<string> => {
     return new Promise((resolve, reject) => {
       const reader = new FileReader();
       reader.readAsDataURL(file);
       reader.onload = () => {
         if (typeof reader.result === 'string') {
-          // Remove the data URL prefix (e.g., "data:image/jpeg;base64,")
           const base64 = reader.result.split(',')[1];
           resolve(base64);
         } else {
