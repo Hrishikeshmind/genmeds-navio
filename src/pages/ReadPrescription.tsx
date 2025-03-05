@@ -70,7 +70,7 @@ const ReadPrescription = () => {
         throw new Error("OpenAI API key is missing. Please check your .env file.");
       }
       
-      // Check if it's a valid API key format (simple check)
+      // We're using an OpenAI organization API key which starts with 'sk-proj'
       if (!API_KEY.startsWith('sk-')) {
         throw new Error("OpenAI API key format appears invalid. It should start with 'sk-'");
       }
@@ -139,17 +139,23 @@ const ReadPrescription = () => {
       
       if (error instanceof Error) {
         errorMessage = error.message;
+        console.log("Error message:", errorMessage);
       } else if (axios.isAxiosError(error)) {
         if (error.response) {
           console.log("Error response data:", error.response.data);
           console.log("Error response status:", error.response.status);
           
           if (error.response.status === 401) {
-            errorMessage = "Authentication failed. The API key might be invalid or expired. Please check the API key in the .env file.";
+            errorMessage = "Authentication failed. The API key might be invalid or expired. Please contact support for assistance.";
           } else if (error.response.status === 429) {
             errorMessage = "Rate limit exceeded. Please try again in a few minutes.";
           } else if (error.response.status >= 500) {
             errorMessage = "OpenAI server error. Please try again later.";
+          } else {
+            errorMessage = `API Error: ${error.response.status} - ${error.response.statusText}`;
+            if (error.response.data?.error?.message) {
+              errorMessage += ` - ${error.response.data.error.message}`;
+            }
           }
         } else if (error.request) {
           errorMessage = "No response received from server. Check your internet connection.";
