@@ -9,7 +9,7 @@ import { Alert, AlertTitle, AlertDescription } from "@/components/ui/alert";
 import axios from "axios";
 
 // Hardcoded API key
-const API_KEY = "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";
+const API_KEY = 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;
 
 const ReadPrescription = () => {
   const navigate = useNavigate();
