@@ -8,8 +8,8 @@ import { toast } from "@/components/ui/use-toast";
 import { Alert, AlertTitle, AlertDescription } from "@/components/ui/alert";
 import axios from "axios";
 
-// Hardcoded API key
-const API_KEY = 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;
+// Get API key from environment variable
+const API_KEY = import.meta.env.VITE_OPENAI_API_KEY;
 
 const ReadPrescription = () => {
   const navigate = useNavigate();
@@ -64,6 +64,10 @@ const ReadPrescription = () => {
       const base64Image = await fileToBase64(file);
       
       console.log("Making API request to OpenAI Vision...");
+      
+      if (!API_KEY || API_KEY === "your-api-key-here") {
+        throw new Error("OpenAI API key is missing or invalid. Please set it in the .env file.");
+      }
       
       const response = await axios.post(
         'https://api.openai.com/v1/chat/completions', 
@@ -133,7 +137,7 @@ const ReadPrescription = () => {
           console.log("Error response status:", error.response.status);
           
           if (error.response.status === 401) {
-            errorMessage = "Authentication failed. Please check the API key configuration.";
+            errorMessage = "Authentication failed. Please check the API key in the .env file.";
           } else if (error.response.status === 429) {
             errorMessage = "Rate limit exceeded. Please try again in a few minutes.";
           } else if (error.response.status >= 500) {
