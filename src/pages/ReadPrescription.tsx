@@ -65,9 +65,17 @@ const ReadPrescription = () => {
       
       console.log("Making API request to OpenAI Vision...");
       
-      if (!API_KEY || API_KEY === "your-api-key-here") {
-        throw new Error("OpenAI API key is missing or invalid. Please set it in the .env file.");
+      // Verify API key before making request
+      if (!API_KEY) {
+        throw new Error("OpenAI API key is missing. Please check your .env file.");
       }
+      
+      // Check if it's a valid API key format (simple check)
+      if (!API_KEY.startsWith('sk-')) {
+        throw new Error("OpenAI API key format appears invalid. It should start with 'sk-'");
+      }
+      
+      console.log("Using API key that starts with:", API_KEY.substring(0, 5) + "...");
       
       const response = await axios.post(
         'https://api.openai.com/v1/chat/completions', 
@@ -137,7 +145,7 @@ const ReadPrescription = () => {
           console.log("Error response status:", error.response.status);
           
           if (error.response.status === 401) {
-            errorMessage = "Authentication failed. Please check the API key in the .env file.";
+            errorMessage = "Authentication failed. The API key might be invalid or expired. Please check the API key in the .env file.";
           } else if (error.response.status === 429) {
             errorMessage = "Rate limit exceeded. Please try again in a few minutes.";
           } else if (error.response.status >= 500) {
