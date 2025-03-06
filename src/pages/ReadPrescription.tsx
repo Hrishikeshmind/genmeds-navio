@@ -1,15 +1,17 @@
 
 import { useState } from "react";
-import { Eye, Upload, ArrowLeft } from "lucide-react";
+import { Eye, Upload, ArrowLeft, CloudLightning, BookOpenCheck } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Card } from "@/components/ui/card";
 import { useNavigate } from "react-router-dom";
 import { toast } from "@/components/ui/use-toast";
 import { Alert, AlertTitle, AlertDescription } from "@/components/ui/alert";
+import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import axios from "axios";
+import { analyzeImageForMedications } from "@/services/googleVisionService";
 
-// Get API key from environment variable
-const API_KEY = import.meta.env.VITE_OPENAI_API_KEY;
+// Get API keys from environment variables
+const OPENAI_API_KEY = import.meta.env.VITE_OPENAI_API_KEY;
 
 const ReadPrescription = () => {
   const navigate = useNavigate();
@@ -18,6 +20,7 @@ const ReadPrescription = () => {
   const [results, setResults] = useState<string[]>([]);
   const [isLoading, setIsLoading] = useState<boolean>(false);
   const [error, setError] = useState<string | null>(null);
+  const [selectedTab, setSelectedTab] = useState<string>("openai");
 
   const handleFileChange = (e: React.ChangeEvent<HTMLInputElement>) => {
     if (e.target.files && e.target.files[0]) {
@@ -46,36 +49,36 @@ const ReadPrescription = () => {
     }
   };
 
-  const handleSubmit = async (e: React.FormEvent) => {
-    e.preventDefault();
-    if (!file) {
-      toast({
-        title: "No file selected",
-        description: "Please select a prescription image to analyze",
-        variant: "destructive",
-      });
-      return;
-    }
+  const fileToBase64 = (file: File): Promise<string> => {
+    return new Promise((resolve, reject) => {
+      const reader = new FileReader();
+      reader.readAsDataURL(file);
+      reader.onload = () => {
+        if (typeof reader.result === 'string') {
+          const base64 = reader.result.split(',')[1];
+          resolve(base64);
+        } else {
+          reject(new Error('Failed to convert file to base64'));
+        }
+      };
+      reader.onerror = error => reject(error);
+    });
+  };
 
-    setIsLoading(true);
-    setError(null);
-
+  const analyzeWithOpenAI = async (base64Image: string) => {
     try {
-      const base64Image = await fileToBase64(file);
-      
       console.log("Making API request to OpenAI Vision...");
       
       // Verify API key before making request
-      if (!API_KEY) {
+      if (!OPENAI_API_KEY) {
         throw new Error("OpenAI API key is missing. Please check your .env file.");
       }
       
-      // OpenAI keys starting with 'sk-proj' are valid for organization usage
-      if (!API_KEY.startsWith('sk-')) {
+      if (!OPENAI_API_KEY.startsWith('sk-')) {
         throw new Error("OpenAI API key format appears invalid. It should start with 'sk-'");
       }
       
-      console.log("Using API key that starts with:", API_KEY.substring(0, 5) + "...");
+      console.log("Using API key that starts with:", OPENAI_API_KEY.substring(0, 5) + "...");
       
       const response = await axios.post(
         'https://api.openai.com/v1/chat/completions', 
@@ -96,7 +99,7 @@ const ReadPrescription = () => {
                 {
                   type: "image_url",
                   image_url: {
-                    url: `data:image/${file.type.split('/')[1]};base64,${base64Image}`
+                    url: `data:image/${file?.type.split('/')[1]};base64,${base64Image}`
                   }
                 }
               ]
@@ -108,13 +111,13 @@ const ReadPrescription = () => {
         {
           headers: {
             'Content-Type': 'application/json',
-            'Authorization': `Bearer ${API_KEY}`
+            'Authorization': `Bearer ${OPENAI_API_KEY}`
           },
           timeout: 60000
         }
       );
 
-      console.log("Received response:", response.data);
+      console.log("Received response from OpenAI:", response.data);
 
       if (response.data && response.data.choices && response.data.choices[0].message) {
         const content = response.data.choices[0].message.content;
@@ -123,15 +126,46 @@ const ReadPrescription = () => {
           .filter((line: string) => line.trim() !== '')
           .map((line: string) => line.replace(/^\d+\.\s*/, '').trim());
         
-        setResults(medicationList);
-        
-        toast({
-          title: "Analysis complete",
-          description: "Medication names have been extracted successfully",
-        });
+        return medicationList;
       } else {
-        throw new Error("Unexpected API response format");
+        throw new Error("Unexpected API response format from OpenAI");
       }
+    } catch (error) {
+      console.error("Error with OpenAI Vision:", error);
+      throw error;
+    }
+  };
+
+  const handleSubmit = async (e: React.FormEvent) => {
+    e.preventDefault();
+    if (!file) {
+      toast({
+        title: "No file selected",
+        description: "Please select a prescription image to analyze",
+        variant: "destructive",
+      });
+      return;
+    }
+
+    setIsLoading(true);
+    setError(null);
+
+    try {
+      const base64Image = await fileToBase64(file);
+      let medicationList: string[] = [];
+      
+      if (selectedTab === "openai") {
+        medicationList = await analyzeWithOpenAI(base64Image);
+      } else {
+        medicationList = await analyzeImageForMedications(base64Image);
+      }
+      
+      setResults(medicationList);
+      
+      toast({
+        title: "Analysis complete",
+        description: `Extracted ${medicationList.length} medication names using ${selectedTab === "openai" ? "OpenAI" : "Google Vision"}`,
+      });
     } catch (error) {
       console.error("Error analyzing prescription:", error);
       
@@ -150,7 +184,7 @@ const ReadPrescription = () => {
           } else if (error.response.status === 429) {
             errorMessage = "Rate limit exceeded. Please try again in a few minutes.";
           } else if (error.response.status >= 500) {
-            errorMessage = "OpenAI server error. Please try again later.";
+            errorMessage = "Server error. Please try again later.";
           } else {
             errorMessage = `API Error: ${error.response.status} - ${error.response.statusText}`;
             if (error.response.data?.error?.message) {
@@ -171,22 +205,6 @@ const ReadPrescription = () => {
     } finally {
       setIsLoading(false);
     }
-  };
-
-  const fileToBase64 = (file: File): Promise<string> => {
-    return new Promise((resolve, reject) => {
-      const reader = new FileReader();
-      reader.readAsDataURL(file);
-      reader.onload = () => {
-        if (typeof reader.result === 'string') {
-          const base64 = reader.result.split(',')[1];
-          resolve(base64);
-        } else {
-          reject(new Error('Failed to convert file to base64'));
-        }
-      };
-      reader.onerror = error => reject(error);
-    });
   };
 
   return (
@@ -223,6 +241,35 @@ const ReadPrescription = () => {
               <p className="text-gray-500">
                 Upload a clear image of your prescription. We'll extract the medication names from it.
               </p>
+              
+              <Tabs 
+                defaultValue="openai" 
+                onValueChange={setSelectedTab}
+                className="w-full"
+              >
+                <TabsList className="grid w-full grid-cols-2">
+                  <TabsTrigger value="openai" className="flex items-center">
+                    <BookOpenCheck className="w-4 h-4 mr-2" />
+                    OpenAI Vision
+                  </TabsTrigger>
+                  <TabsTrigger value="google" className="flex items-center">
+                    <CloudLightning className="w-4 h-4 mr-2" />
+                    Google Vision
+                  </TabsTrigger>
+                </TabsList>
+                
+                <TabsContent value="openai" className="mt-4">
+                  <p className="text-sm text-gray-500 mb-4">
+                    Uses OpenAI's Vision API for high-quality medication extraction from prescriptions.
+                  </p>
+                </TabsContent>
+                
+                <TabsContent value="google" className="mt-4">
+                  <p className="text-sm text-gray-500 mb-4">
+                    Uses Google Cloud Vision OCR for fast and efficient medication name extraction.
+                  </p>
+                </TabsContent>
+              </Tabs>
               
               <div className="border-2 border-dashed border-gray-300 rounded-lg p-8 text-center">
                 <input
@@ -261,7 +308,17 @@ const ReadPrescription = () => {
                 className="w-full" 
                 disabled={!file || isLoading}
               >
-                {isLoading ? "Scanning..." : "Scan Medications"}
+                {isLoading ? (
+                  <span className="flex items-center">
+                    <svg className="animate-spin -ml-1 mr-3 h-4 w-4 text-white" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24">
+                      <circle className="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" strokeWidth="4"></circle>
+                      <path className="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z"></path>
+                    </svg>
+                    Scanning...
+                  </span>
+                ) : (
+                  `Scan with ${selectedTab === "openai" ? "OpenAI Vision" : "Google Vision"}`
+                )}
               </Button>
             </Card>
             
