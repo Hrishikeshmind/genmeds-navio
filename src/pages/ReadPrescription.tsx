@@ -1,4 +1,3 @@
-
 import { useState } from "react";
 import { Eye, Upload, ArrowLeft, CloudLightning, BookOpenCheck } from "lucide-react";
 import { Button } from "@/components/ui/button";
@@ -70,8 +69,8 @@ const ReadPrescription = () => {
       console.log("Making API request to OpenAI Vision...");
       
       // Verify API key before making request
-      if (!OPENAI_API_KEY) {
-        throw new Error("OpenAI API key is missing. Please check your .env file.");
+      if (!OPENAI_API_KEY || OPENAI_API_KEY === 'your-openai-api-key-here') {
+        throw new Error("OpenAI API key is missing. Please add your API key to the .env file.");
       }
       
       if (!OPENAI_API_KEY.startsWith('sk-')) {
@@ -155,8 +154,15 @@ const ReadPrescription = () => {
       let medicationList: string[] = [];
       
       if (selectedTab === "openai") {
+        if (!OPENAI_API_KEY || OPENAI_API_KEY === 'your-openai-api-key-here') {
+          throw new Error("OpenAI API key not configured. Please add your API key to the environment variables.");
+        }
         medicationList = await analyzeWithOpenAI(base64Image);
       } else {
+        const googleCreds = import.meta.env.VITE_GOOGLE_CLOUD_CREDENTIALS;
+        if (!googleCreds || googleCreds.includes('your-project-id')) {
+          throw new Error("Google Cloud Vision credentials not configured. Please add your credentials to the environment variables.");
+        }
         medicationList = await analyzeImageForMedications(base64Image);
       }
       
