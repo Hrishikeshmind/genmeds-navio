@@ -70,7 +70,7 @@ const ReadPrescription = () => {
         throw new Error("OpenAI API key is missing. Please check your .env file.");
       }
       
-      // We're using an OpenAI organization API key which starts with 'sk-proj'
+      // OpenAI keys starting with 'sk-proj' are valid for organization usage
       if (!API_KEY.startsWith('sk-')) {
         throw new Error("OpenAI API key format appears invalid. It should start with 'sk-'");
       }
@@ -84,14 +84,14 @@ const ReadPrescription = () => {
           messages: [
             {
               role: "system",
-              content: "You are a medical professional analyzing prescriptions. Extract information with high precision and clarity."
+              content: "You are a medical professional analyzing prescriptions. Extract ONLY the medication names from the prescription image. Be extremely precise."
             },
             {
               role: "user",
               content: [
                 {
                   type: "text",
-                  text: "Please carefully extract and list all medications with their exact:\n1. Name and strength\n2. Dosage form (tablet, capsule, syrup, etc.)\n3. Frequency and timing of administration\n4. Duration of treatment if specified\n5. Any special instructions\n\nBe extremely precise and format the information clearly. If any part is unclear, indicate that explicitly."
+                  text: "Please extract ONLY the medication names from this prescription. Return each medication name on a new line. Do not include dosage, frequency, or any other information."
                 },
                 {
                   type: "image_url",
@@ -102,8 +102,8 @@ const ReadPrescription = () => {
               ]
             }
           ],
-          max_tokens: 1000,
-          temperature: 0.3
+          max_tokens: 500,
+          temperature: 0.2
         },
         {
           headers: {
@@ -127,7 +127,7 @@ const ReadPrescription = () => {
         
         toast({
           title: "Analysis complete",
-          description: "Your prescription has been analyzed successfully",
+          description: "Medication names have been extracted successfully",
         });
       } else {
         throw new Error("Unexpected API response format");
@@ -146,7 +146,7 @@ const ReadPrescription = () => {
           console.log("Error response status:", error.response.status);
           
           if (error.response.status === 401) {
-            errorMessage = "Authentication failed. The API key might be invalid or expired. Please contact support for assistance.";
+            errorMessage = "Authentication failed. The API key might be invalid or expired.";
           } else if (error.response.status === 429) {
             errorMessage = "Rate limit exceeded. Please try again in a few minutes.";
           } else if (error.response.status >= 500) {
@@ -205,7 +205,7 @@ const ReadPrescription = () => {
             </Button>
             <div className="flex items-center space-x-2">
               <Eye className="w-6 h-6 text-primary" />
-              <h1 className="text-3xl font-bold text-secondary">Prescription Reader</h1>
+              <h1 className="text-3xl font-bold text-secondary">Medication Scanner</h1>
             </div>
           </div>
           
@@ -221,7 +221,7 @@ const ReadPrescription = () => {
               <h2 className="text-xl font-semibold">Upload Prescription</h2>
               
               <p className="text-gray-500">
-                Upload a clear image of your prescription. We'll analyze it and identify the medications.
+                Upload a clear image of your prescription. We'll extract the medication names from it.
               </p>
               
               <div className="border-2 border-dashed border-gray-300 rounded-lg p-8 text-center">
@@ -261,18 +261,18 @@ const ReadPrescription = () => {
                 className="w-full" 
                 disabled={!file || isLoading}
               >
-                {isLoading ? "Analyzing..." : "Analyze Prescription"}
+                {isLoading ? "Scanning..." : "Scan Medications"}
               </Button>
             </Card>
             
             <Card className="bg-white rounded-xl shadow-lg p-6">
-              <h2 className="text-xl font-semibold mb-4">Results</h2>
+              <h2 className="text-xl font-semibold mb-4">Medications</h2>
               
               {results.length === 0 ? (
                 <div className="flex flex-col items-center justify-center h-64 text-center">
                   <Eye className="w-12 h-12 text-gray-300 mb-2" />
                   <p className="text-gray-500">
-                    Upload and analyze a prescription to see the results here
+                    Upload and scan a prescription to see medication names here
                   </p>
                 </div>
               ) : (
@@ -292,7 +292,7 @@ const ReadPrescription = () => {
                     <p className="text-xs text-gray-400">
                       Disclaimer: This is an automated analysis and may not be 100% accurate. 
                       Always consult a healthcare professional or pharmacist to verify the 
-                      medications and dosages.
+                      medication names.
                     </p>
                   </div>
                 </div>
