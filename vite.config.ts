@@ -4,7 +4,6 @@ import react from "@vitejs/plugin-react-swc";
 import path from "path";
 import { componentTagger } from "lovable-tagger";
 
-// https://vitejs.dev/config/
 export default defineConfig(({ mode }) => ({
   server: {
     host: "::",
@@ -21,10 +20,13 @@ export default defineConfig(({ mode }) => ({
     },
   },
   define: {
-    // Add polyfills for Node.js environment variables
-    'process.env': {}, 
+    'process.env': {},
+    'process.stdin': {},
+    'process.stdout': {},
+    'process.stderr': {},
     'process.browser': true,
     'process.version': '"v16.0.0"',
     'process.platform': '"browser"',
+    'process.isTTY': false
   }
 }));
