@@ -19,6 +19,13 @@ export default defineConfig(({ mode }) => ({
       "@": path.resolve(__dirname, "./src"),
     },
   },
+  optimizeDeps: {
+    esbuildOptions: {
+      define: {
+        global: 'globalThis',
+      },
+    },
+  },
   define: {
     'process.env': {},
     'process.stdin': {},
@@ -27,6 +34,7 @@ export default defineConfig(({ mode }) => ({
     'process.browser': true,
     'process.version': '"v16.0.0"',
     'process.platform': '"browser"',
-    'process.isTTY': false
+    'process.isTTY': false,
+    global: 'globalThis',
   }
 }));
