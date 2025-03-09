@@ -2,6 +2,7 @@
 import { MapPin, Search, Scale, Pill, Eye } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Link } from "react-router-dom";
+import UserMenu from "./UserMenu";
 
 const NavigationHeader = () => {
   return (
@@ -39,6 +40,8 @@ const NavigationHeader = () => {
               </Button>
             </Link>
           </div>
+          
+          <UserMenu />
         </nav>
       </div>
     </header>
