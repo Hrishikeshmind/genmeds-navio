@@ -45,6 +45,16 @@ const SellMedicines = () => {
     setLicenseNumber("");
   };
 
+  const handleTabChange = (value: string) => {
+    // Switch to the register tab
+    if (value === "register") {
+      const registerTab = document.querySelector('[data-value="register"]');
+      if (registerTab instanceof HTMLElement) {
+        registerTab.click();
+      }
+    }
+  };
+
   return (
     <div className="min-h-screen pt-20 bg-white">
       <div className="container mx-auto px-4">
@@ -213,7 +223,7 @@ const SellMedicines = () => {
                 </div>
                 
                 <div className="mt-8 flex justify-center">
-                  <Button onClick={() => document.querySelector('[data-value="register"]')?.click()}>
+                  <Button onClick={() => handleTabChange("register")}>
                     Register Your Store Now
                   </Button>
                 </div>

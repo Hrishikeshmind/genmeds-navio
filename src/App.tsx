@@ -14,6 +14,7 @@ import ReadPrescription from "./pages/ReadPrescription";
 import SignIn from "./pages/SignIn";
 import SignUp from "./pages/SignUp";
 import SellMedicines from "./pages/SellMedicines";
+import MedicineStores from "./pages/MedicineStores";
 import NotFound from "./pages/NotFound";
 
 const queryClient = new QueryClient();
@@ -35,6 +36,7 @@ const App = () => (
             <Route path="/signin" element={<SignIn />} />
             <Route path="/signup" element={<SignUp />} />
             <Route path="/sell" element={<SellMedicines />} />
+            <Route path="/medicine-stores" element={<MedicineStores />} />
             <Route path="*" element={<NotFound />} />
           </Routes>
         </BrowserRouter>

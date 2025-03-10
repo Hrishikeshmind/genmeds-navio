@@ -24,6 +24,12 @@ const NavigationHeader = () => {
                 <span>Find Stores</span>
               </Button>
             </Link>
+            <Link to="/medicine-stores">
+              <Button variant="ghost" className="flex items-center space-x-2">
+                <Store className="w-4 h-4" />
+                <span>Medicine Stores</span>
+              </Button>
+            </Link>
             <Link to="/compare">
               <Button variant="ghost" className="flex items-center space-x-2">
                 <Scale className="w-4 h-4" />
