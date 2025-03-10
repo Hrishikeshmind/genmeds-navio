@@ -1,6 +1,6 @@
 
 import { Button } from "@/components/ui/button";
-import { MapPin } from "lucide-react";
+import { MapPin, Store } from "lucide-react";
 import { Link } from "react-router-dom";
 
 const HeroSection = () => {
@@ -32,6 +32,15 @@ const HeroSection = () => {
             <Link to="/compare">
               <Button variant="outline" className="w-full sm:w-auto h-12 px-8">
                 Compare Prices
+              </Button>
+            </Link>
+          </div>
+          
+          <div className="mt-8 flex flex-col sm:flex-row items-center justify-center space-y-4 sm:space-y-0 sm:space-x-4">
+            <Link to="/sell">
+              <Button variant="ghost" className="flex items-center">
+                <Store className="w-4 h-4 mr-2" />
+                <span>Are you a store owner? Sell with us</span>
               </Button>
             </Link>
           </div>

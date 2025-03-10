@@ -1,5 +1,5 @@
 
-import { MapPin, Search, Scale } from "lucide-react";
+import { MapPin, Search, Scale, Store } from "lucide-react";
 import FeatureCard from "./FeatureCard";
 
 const Features = () => {
@@ -18,6 +18,11 @@ const Features = () => {
       icon: Search,
       title: "Smart Search",
       description: "Search for medicines by name, composition, or scan your prescription for quick results."
+    },
+    {
+      icon: Store,
+      title: "Sell Medicines",
+      description: "Pharmacies and medical stores can list their inventory and reach more customers."
     }
   ];
 
@@ -33,7 +38,7 @@ const Features = () => {
           </p>
         </div>
         
-        <div className="grid grid-cols-1 md:grid-cols-3 gap-8">
+        <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-8">
           {features.map((feature) => (
             <FeatureCard
               key={feature.title}

@@ -13,6 +13,7 @@ import MedicalChat from "./pages/MedicalChat";
 import ReadPrescription from "./pages/ReadPrescription";
 import SignIn from "./pages/SignIn";
 import SignUp from "./pages/SignUp";
+import SellMedicines from "./pages/SellMedicines";
 import NotFound from "./pages/NotFound";
 
 const queryClient = new QueryClient();
@@ -33,6 +34,7 @@ const App = () => (
             <Route path="/read-prescription" element={<ReadPrescription />} />
             <Route path="/signin" element={<SignIn />} />
             <Route path="/signup" element={<SignUp />} />
+            <Route path="/sell" element={<SellMedicines />} />
             <Route path="*" element={<NotFound />} />
           </Routes>
         </BrowserRouter>
