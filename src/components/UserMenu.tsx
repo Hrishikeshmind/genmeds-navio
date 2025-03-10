@@ -1,9 +1,8 @@
 
 import React from 'react';
-import { Link } from 'react-router-dom';
 import { useAuth } from '@/contexts/AuthContext';
 import { Button } from "@/components/ui/button";
-import { LogIn, UserPlus, LogOut, User } from 'lucide-react';
+import { LogOut, User } from 'lucide-react';
 
 const UserMenu = () => {
   const { user, signOut } = useAuth();
@@ -14,7 +13,7 @@ const UserMenu = () => {
   };
   
   if (!user) {
-    return null; // Don't render anything when user is not logged in, as we'll handle this in NavigationHeader
+    return null; // Don't render anything when user is not logged in
   }
   
   return (

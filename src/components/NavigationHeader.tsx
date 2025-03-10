@@ -3,8 +3,11 @@ import { MapPin, Search, Scale, Pill, Eye, LogIn, UserPlus } from "lucide-react"
 import { Button } from "@/components/ui/button";
 import { Link } from "react-router-dom";
 import UserMenu from "./UserMenu";
+import { useAuth } from "@/contexts/AuthContext";
 
 const NavigationHeader = () => {
+  const { user } = useAuth();
+  
   return (
     <header className="fixed top-0 left-0 right-0 z-50 bg-white/80 backdrop-blur-md border-b border-gray-100">
       <div className="container mx-auto px-4">
@@ -41,20 +44,24 @@ const NavigationHeader = () => {
             </Link>
           </div>
           
-          <div className="flex items-center space-x-2">
-            <Link to="/signin">
-              <Button variant="ghost" size="sm" className="flex items-center">
-                <LogIn className="w-4 h-4 mr-2" />
-                <span>Sign In</span>
-              </Button>
-            </Link>
-            <Link to="/signup">
-              <Button variant="default" size="sm" className="flex items-center">
-                <UserPlus className="w-4 h-4 mr-2" />
-                <span>Sign Up</span>
-              </Button>
-            </Link>
-          </div>
+          {user ? (
+            <UserMenu />
+          ) : (
+            <div className="flex items-center space-x-2">
+              <Link to="/signin">
+                <Button variant="ghost" size="sm" className="flex items-center">
+                  <LogIn className="w-4 h-4 mr-2" />
+                  <span>Sign In</span>
+                </Button>
+              </Link>
+              <Link to="/signup">
+                <Button variant="default" size="sm" className="flex items-center">
+                  <UserPlus className="w-4 h-4 mr-2" />
+                  <span>Sign Up</span>
+                </Button>
+              </Link>
+            </div>
+          )}
         </nav>
       </div>
     </header>
