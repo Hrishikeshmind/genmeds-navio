@@ -1,5 +1,5 @@
 
-import { MapPin, Search, Scale, Pill, Eye, LogIn, UserPlus, Store } from "lucide-react";
+import { MapPin, Search, Scale, Pill, Eye, LogIn, UserPlus, Store, Calculator } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Link } from "react-router-dom";
 import UserMenu from "./UserMenu";
@@ -46,6 +46,12 @@ const NavigationHeader = () => {
               <Button variant="ghost" className="flex items-center space-x-2">
                 <Eye className="w-4 h-4" />
                 <span>Read Prescription</span>
+              </Button>
+            </Link>
+            <Link to="/calculator">
+              <Button variant="ghost" className="flex items-center space-x-2">
+                <Calculator className="w-4 h-4" />
+                <span>Expense Calculator</span>
               </Button>
             </Link>
             <Link to="/sell">
