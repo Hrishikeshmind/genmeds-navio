@@ -1,5 +1,5 @@
 
-import { MapPin, Search, Scale, Pill, Eye } from "lucide-react";
+import { MapPin, Search, Scale, Pill, Eye, LogIn, UserPlus } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Link } from "react-router-dom";
 import UserMenu from "./UserMenu";
@@ -41,7 +41,20 @@ const NavigationHeader = () => {
             </Link>
           </div>
           
-          <UserMenu />
+          <div className="flex items-center space-x-2">
+            <Link to="/signin">
+              <Button variant="ghost" size="sm" className="flex items-center">
+                <LogIn className="w-4 h-4 mr-2" />
+                <span>Sign In</span>
+              </Button>
+            </Link>
+            <Link to="/signup">
+              <Button variant="default" size="sm" className="flex items-center">
+                <UserPlus className="w-4 h-4 mr-2" />
+                <span>Sign Up</span>
+              </Button>
+            </Link>
+          </div>
         </nav>
       </div>
     </header>

@@ -14,22 +14,7 @@ const UserMenu = () => {
   };
   
   if (!user) {
-    return (
-      <div className="flex items-center space-x-2">
-        <Link to="/signin">
-          <Button variant="ghost" size="sm" className="flex items-center">
-            <LogIn className="w-4 h-4 mr-2" />
-            <span>Sign In</span>
-          </Button>
-        </Link>
-        <Link to="/signup">
-          <Button variant="default" size="sm" className="flex items-center">
-            <UserPlus className="w-4 h-4 mr-2" />
-            <span>Sign Up</span>
-          </Button>
-        </Link>
-      </div>
-    );
+    return null; // Don't render anything when user is not logged in, as we'll handle this in NavigationHeader
   }
   
   return (
